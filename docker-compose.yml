@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  redis:
+    image: 'redis'
+    command: redis-server --appendonly yes
+    expose:
+      - '6379'
+
+  teleport_app:
+    build: .
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - '.:/teleport_app'
+      #- /tmp:
+    ports:
+      - '8001:8000'
+#    command: >
+#      gunicorn -b 0.0.0.0:8000
+#        --access-logfile -
+#        --reload
+#        "app:teleport_app"
+

@@ -1,0 +1,32 @@
+<!doctype html>
+
+<head>
+<meta charset='utf-8'>
+<title>TELEPORT APP</title>
+</head>
+
+</body>
+<div >
+  <form  enctype="multipart/form-data" method="post" action="{{ post_route }}">
+    <input type=file name="bundle-file">
+    <br>
+    {% for message in get_flashed_messages() %}
+       <p style="color: red;">{{ message }}</p>
+    {% endfor %} 
+    <p style="margin-top:3cm;"> Enter teleport start and end dates </p>
+    <textarea id="textarea" name="teleport-form" rows=20 cols=50>{{ saved_form }}</textarea>
+    <input type="submit" value="Submit">
+  </form>
+</div>
+
+<style>
+textarea {
+    background: url(http://i.imgur.com/2cOaJ.png);
+    background-attachment: local;
+    background-repeat: no-repeat;
+    padding-left: 35px;
+    padding-top: 10px;
+    border-color:#ccc;
+}
+</style>
+</body>
