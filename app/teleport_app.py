@@ -20,7 +20,7 @@ def index_get():
     if request.method == 'GET':
         name = request.args.get('name','noname')
         session['name'] = name 
-    return render_template('index.html', post_route="/")
+    return render_template('index.html')
 
 
 def allowed_file(filename):
@@ -46,7 +46,7 @@ def publish(filename, entryid=None):
         pargs = ['ramadda_publish', filepath]
     # publish cannot publish files outside of current directory so 
     # using ugly cd and shell for now 
-    publish_status = subprocess.check_output([f"cd {g.user_dir};ramadda_publish {filename}"], shell=True)
+    publish_status = subprocess.check_output([f"cd {os.path.abspath(g.user_dir)};ramadda_publish {filename}"], shell=True)
     
     published_link = publish_status.decode().splitlines()[-1].split()[-1] # gets location 
     entryid = parse_qs(urlparse(published_link).query)['entryid'][0]
@@ -183,12 +183,16 @@ def index_post():
         # check if second argument is int number of days
         elif validate_timedelta(dates[1]):
             endtime = datetime.strptime(starttime, '%Y-%m-%d %H:%M:%S') + timedelta(days=int(dates[1]))
+            endtime = endtime.strftime('%Y-%m-%d 00:00:00')
         # skip if above dont work
         else:
             continue
         # check if datetime or if int check if date is of type yyyymmdd        
- 
-        casename = "_".join([os.path.basename(bundle.filename).split('.')[0],"_".join(starttime.split())])
+        
+        # date and time  
+        #casename = "_".join([os.path.basename(bundle.filename).split('.')[0],"_".join(starttime.split()),"_".join(endtime.split())])
+        #only date
+        casename = "_".join([os.path.basename(bundle.filename).split('.')[0],starttime.split()[0],endtime.split()[0]])
         # submit jobs to the celery workers
         celery_jobs.append(check_run.s(g.user_dir,bundle.filename,casename,starttime,endtime,entryid))
     
