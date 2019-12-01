@@ -56,11 +56,12 @@ def check_run(self, mount_dir, bundle='NOAA_sst.xidv', casename='NOAA_sst', star
     # this kind of session dir mounting doesnt work if upload directory is docker volume
     # then we need to mount entire upload directory
     #volumes = {os.path.abspath(mount_dir): {'bind': mount_dst, 'mode':'rw'}} 
-    volumes = {os.path.dirname(os.path.abspath(mount_dir)): {'bind': "/uploads", 'mode':'rw'}} 
+    #volumes = {os.path.dirname(os.path.abspath(mount_dir)): {'bind': "/uploads", 'mode':'rw'}} 
+    volumes = {"/app/uploads": {'bind': "/uploads", 'mode':'rw'}} 
     working_dir = os.path.join("/uploads", os.path.basename(mount_dir))
         
 
-    command = f"xvfb-run /IDV/runIDV -islinteractive {os.path.basename(isl_file)}"
+    command = f"xvfb-run /IDV/runIDV -islinteractive -noerrorsingui {os.path.basename(isl_file)}"
     user = "1000:1000"
     # command_fail = "xvfb-run /IDV/runIDV "
     # if detach=False (default) call is blocking and success can be known by output 
