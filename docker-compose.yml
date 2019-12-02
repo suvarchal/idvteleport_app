@@ -7,12 +7,13 @@ services:
     expose:
       - 6379
 
-  teleport_app:
+  idvteleport_app:
     image: teleport_app
 #    build: .
+    environment: 
+      - REDIS_HOST=redis
     volumes:
-      - ./app:/app
-      - /tmp/uploads:/uploads
+      - /tmp/uploads:/app/uploads
     working_dir: /app
     
 #    user: "1000:133"
@@ -24,16 +25,14 @@ services:
     ports:
       - "5000:5000"
 
-  celery_app:
+  idvcelery_app:
     image: teleport_app
 #    build: .
     environment: 
       - REDIS_HOST=redis
     volumes:
-      - ./app:/app
-      #- ./app/uploads:/app/uploads
-      - /tmp/uploads:/uploads
       - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp/uploads:/app/uploads
     working_dir: /app
 
 #    user: "1000:133"

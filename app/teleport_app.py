@@ -86,10 +86,11 @@ def validate_form(form_data):
     errors = False
     for lino,li in enumerate(lines):
         dates=li.strip().split()
-        if not len(dates) == 2:
+        if not (len(dates) == 2 or len(dates) == 6):
             flash(f'Error in line:{lino+1}: Wrong number of arguments.'
                   'each line should have atleast 2 arguments seperated by space'
-                  'startdate enddate or middate and timedelta in integer number of days')
+                  'startdate enddate or middate and timedelta in integer number of days'
+                  'optionally specify bounds in order North West South East')
             errors = True
             continue
         start_date = validate_datetime(dates[0])
@@ -106,6 +107,7 @@ def validate_form(form_data):
                   'second argument should be end date in format YYYY-MM-DD or'
                   'time duration in integer number of days.')
             errors = True
+        # validate north west south east
     return errors
 
 
@@ -193,8 +195,13 @@ def index_post():
         #casename = "_".join([os.path.basename(bundle.filename).split('.')[0],"_".join(starttime.split()),"_".join(endtime.split())])
         #only date
         casename = "_".join([os.path.basename(bundle.filename).split('.')[0],starttime.split()[0],endtime.split()[0]])
+        # add bbox info , do this above 
+        if len(dates)>2:
+            bbox = ",".join(dates[2:])
+        else: 
+            bbox = None
         # submit jobs to the celery workers
-        celery_jobs.append(check_run.s(g.user_dir,bundle.filename,casename,starttime,endtime,entryid))
+        celery_jobs.append(check_run.s(g.user_dir,bundle.filename,casename,starttime,endtime,bbox,entryid))
     
     job_run = group(celery_jobs).delay()
     

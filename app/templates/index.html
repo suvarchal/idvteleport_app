@@ -13,7 +13,7 @@
     {% for message in get_flashed_messages() %}
        <p style="color: red;">{{ message }}</p>
     {% endfor %} 
-    <p style="margin-top:3cm;"> Enter teleport start and end dates </p>
+    <p style="margin-top:3cm;"> Enter teleport start and end dates and, optionally geobounds in North West South East </p>
     <textarea id="textarea" name="teleport-form" rows=20 cols=50>{{ saved_form }}</textarea>
     <input type="submit" value="Submit">
   </form>

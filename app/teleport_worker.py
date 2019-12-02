@@ -12,7 +12,7 @@ docker_client = docker.from_env()
 # add echo start and end date
 teleport_isl = """<?xml version="1.0" encoding="ISO-8859-1"?>
 <isl debug="true" offscreen="false">
-   <bundle file="{bundle}" timedriverstart="{starttime}" timedriverend="{endtime}" wait="true"/>
+   <bundle file="{bundle}" timedriverstart="{starttime}" timedriverend="{endtime}" {bbox} wait="true"/>
    <pause seconds="30"/>
    <movie file="{casename}.gif" capture="legend" framerate="1" imagequality="1.0" endframepause="2" />
    <group loop="1" sleep="60.0minutes">
@@ -36,33 +36,23 @@ def publish(filepath):
     return None
 
 @app.task(bind=True)
-def check_run(self, mount_dir, bundle='NOAA_sst.xidv', casename='NOAA_sst', starttime='2001-06-01 00:00:00', endtime='2001-09-01 00:00:00', entryid=""):
+def check_run(self, mount_dir, bundle='NOAA_sst.xidv', casename='NOAA_sst', starttime='2001-06-01 00:00:00', endtime='2001-09-01 00:00:00', bbox=None, entryid=""):
     
     # use relative path because we want to run isl in volume mounted container
     isl_file = os.path.join(os.path.relpath(mount_dir), casename+".isl")
-
+    bbox = f'bbox="{bbox}"' if bbox else ''
     with open(os.path.join(mount_dir, casename+".isl"),'wt') as f:
        f.writelines(teleport_isl.format(bundle=bundle, 
                                         casename=casename,
                                         starttime=starttime,
                                         endtime=endtime,
-                                        entryid=entryid
-                                        ))
+                                        bbox=bbox,
+                                        entryid=entryid))
     
     # bind mount mount_dir in container 
-    mount_dst = os.path.join("/", os.path.basename(mount_dir))
-    working_dir = mount_dst
-    print(os.path.abspath(mount_dir)) 
-    # this kind of session dir mounting doesnt work if upload directory is docker volume
-    # then we need to mount entire upload directory
-    #volumes = {os.path.abspath(mount_dir): {'bind': mount_dst, 'mode':'rw'}} 
-    #volumes = {os.path.dirname(os.path.abspath(mount_dir)): {'bind': "/uploads", 'mode':'rw'}} 
-    volumes = {"/app/uploads": {'bind': "/uploads", 'mode':'rw'}} 
-    working_dir = os.path.join("/uploads", os.path.basename(mount_dir))
-        
-
-    command = f"xvfb-run /IDV/runIDV -islinteractive -noerrorsingui {os.path.basename(isl_file)}"
-    user = "1000:1000"
+    mount_dst = os.path.join("/", os.path.basename(mount_dir)) 
+    volumes = {os.path.abspath(mount_dir): {'bind': mount_dst, 'mode':'rw'}}
+    command = f"xvfb-run /IDV/runIDV -islinteractive {os.path.basename(isl_file)}"
     # command_fail = "xvfb-run /IDV/runIDV "
     # if detach=False (default) call is blocking and success can be known by output 
     # tty is required
@@ -72,8 +62,7 @@ def check_run(self, mount_dir, bundle='NOAA_sst.xidv', casename='NOAA_sst', star
                                                  command=command,
                                                  volumes=volumes,
                                                  detach=detach,
-                                                 working_dir=working_dir,
-                                                 remove=True)
+                                                 working_dir=mount_dst)
     if detach:
         for line in container_out.logs(stream=True):
             #print(line.strip())
